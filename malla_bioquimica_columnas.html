@@ -1,0 +1,122 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Malla Bioquímica Interactiva</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #fff;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #b22222;
+    }
+    .anio {
+      display: inline-block;
+      vertical-align: top;
+      margin: 10px;
+      padding: 10px;
+      border-radius: 10px;
+      background-color: #ffeef0;
+      min-width: 200px;
+    }
+    .anio h2 {
+      text-align: center;
+      color: #444;
+    }
+    .materia {
+      margin: 8px;
+      padding: 8px;
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .completada {
+      text-decoration: line-through;
+      background-color: #d4edda;
+    }
+    .bloqueada {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <h1>Malla Interactiva - Bioquímica (Plan 2008)</h1>
+  <div id="contenedor"></div>
+
+  <script>
+    const materias = [
+      // Primer Año
+      { id: "mat1", nombre: "Matemática I", anio: 1, prereqs: [] },
+      { id: "qgen", nombre: "Química General", anio: 1, prereqs: [] },
+      { id: "info", nombre: "Informática Básica", anio: 1, prereqs: [] },
+      { id: "mat2", nombre: "Matemática II", anio: 1, prereqs: ["mat1"] },
+      { id: "fis1", nombre: "Física I", anio: 1, prereqs: ["mat1"] },
+      { id: "qinorg", nombre: "Química Inorgánica", anio: 1, prereqs: ["qgen"] },
+      { id: "biogen", nombre: "Biología General y Celular", anio: 1, prereqs: ["qgen"] },
+
+      // Segundo Año
+      { id: "qan", nombre: "Química Analítica General", anio: 2, prereqs: ["qinorg", "qgen", "fis1", "mat1"] },
+      { id: "qorg1", nombre: "Química Orgánica I", anio: 2, prereqs: ["qinorg", "qgen", "fis1", "mat1"] },
+      { id: "fis2", nombre: "Física II", anio: 2, prereqs: ["mat2", "fis1", "mat1"] },
+      { id: "anato", nombre: "Anatomía e Histología", anio: 2, prereqs: ["biogen"] },
+      { id: "qorg2", nombre: "Química Orgánica II", anio: 2, prereqs: ["qorg1", "fis2", "fis1", "qinorg"] },
+
+      // Tercer Año (ejemplo parcial)
+      { id: "qbio1", nombre: "Química Biológica I", anio: 3, prereqs: ["qorg1", "biogen", "qan"] },
+      { id: "fqui1", nombre: "Fisicoquímica I", anio: 3, prereqs: ["mat2", "qinorg", "qan", "fis1", "fis2"] },
+      { id: "epi", nombre: "Epistemología", anio: 3, prereqs: ["mat1", "info", "biogen"] }
+    ];
+
+    let estado = JSON.parse(localStorage.getItem("estadoMaterias") || "{}");
+
+    function guardarEstado() {
+      localStorage.setItem("estadoMaterias", JSON.stringify(estado));
+    }
+
+    function render() {
+      const contenedor = document.getElementById("contenedor");
+      contenedor.innerHTML = "";
+
+      for (let anio = 1; anio <= 5; anio++) {
+        const col = document.createElement("div");
+        col.className = "anio";
+        col.innerHTML = `<h2>${anio}° Año</h2>`;
+
+        materias
+          .filter(m => m.anio === anio)
+          .forEach(mat => {
+            const desbloqueada = mat.prereqs.every(p => estado[p]);
+            const completada = estado[mat.id];
+
+            const div = document.createElement("div");
+            div.className = "materia";
+            div.textContent = mat.nombre;
+
+            if (completada) div.classList.add("completada");
+            else if (!desbloqueada) div.classList.add("bloqueada");
+
+            div.onclick = () => {
+              if (!desbloqueada) return;
+              estado[mat.id] = !estado[mat.id];
+              guardarEstado();
+              render();
+            };
+
+            col.appendChild(div);
+          });
+
+        contenedor.appendChild(col);
+      }
+    }
+
+    render();
+  </script>
+</body>
+</html>
